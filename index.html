@@ -3,20 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>SonicVault - Personal Music Locker</title>
+    <title>SonicVault Ultra - Pro Audio Locker</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght=300;400;500;600;700&display=swap');
         
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #0f172a;
+            background-color: #020617;
             color: #f8fafc;
             overflow: hidden;
-            -webkit-webkit-touch-callout: none;
+            -webkit-touch-callout: none;
             -webkit-user-select: none;
+            user-select: none;
             -webkit-text-size-adjust: none;
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
@@ -27,401 +27,364 @@
             user-select: text !important;
         }
 
-        @keyframes spin-slow {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
+        button, [role="button"], input[type="file"] {
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            cursor: pointer;
         }
-        .animate-spin-slow { animation: spin-slow 8s linear infinite; }
-
-        @keyframes fade-in {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fade-in { animation: fade-in 1s ease-out forwards; }
-
-        .neon-glow { box-shadow: 0 0 20px rgba(6, 182, 212, 0.4); }
-        .neon-text { text-shadow: 0 0 10px rgba(6, 182, 212, 0.6); }
 
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        @keyframes bounce-bar {
+            0%, 100% { height: 4px; }
+            50% { height: 24px; }
+        }
+        .v-bar { animation: bounce-bar 0.6s ease-in-out infinite; }
+        .v-bar:nth-child(2) { animation-delay: 0.15s; animation-duration: 0.4s; }
+        .v-bar:nth-child(3) { animation-delay: 0.3s; animation-duration: 0.7s; }
     </style>
 </head>
-<body class="h-full w-full select-none flex flex-col justify-between">
+<body class="h-full w-full flex flex-col justify-between">
 
-    <div id="splash-screen" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-slate-950 transition-opacity duration-700 ease-out">
-        <div class="relative flex items-center justify-center w-40 h-40 mb-6">
-            <div class="absolute inset-0 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl rotate-45 opacity-20 blur-xl"></div>
-            <div class="absolute w-32 h-32 bg-slate-900 border-2 border-cyan-500/30 rounded-[1.5rem] rotate-12 flex items-center justify-center shadow-2xl"></div>
-            <div class="absolute w-28 h-28 bg-slate-900 border-4 border-slate-800 rounded-full flex items-center justify-center animate-spin-slow neon-glow border-t-cyan-400 border-b-cyan-400">
-                <div class="w-20 h-20 border border-slate-700/50 rounded-full flex items-center justify-center">
-                    <div class="w-12 h-12 border border-slate-600/30 rounded-full flex items-center justify-center">
-                        <div class="w-6 h-6 bg-cyan-500 rounded-full flex items-center justify-center">
-                            <div class="w-1.5 h-1.5 bg-slate-950 rounded-full"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <h1 class="text-3xl font-bold tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500 opacity-0 animate-fade-in neon-text" style="animation-delay: 0.5s;">
-            SonicVault
-        </h1>
-        <p class="text-slate-500 text-xs mt-2 opacity-0 animate-fade-in" style="animation-delay: 1s;">Your music. Secured.</p>
+    <!-- SPLASH SCREEN -->
+    <div id="splash-screen" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-slate-950 transition-opacity duration-300 ease-out">
+        <div class="w-12 h-12 border-4 border-cyan-500/20 border-t-cyan-400 rounded-full animate-spin mb-4"></div>
+        <h1 class="text-xl font-bold tracking-widest text-slate-200">SONICVAULT</h1>
     </div>
 
-
-    <div id="auth-screen" class="hidden fixed inset-0 z-40 flex items-center justify-center bg-slate-950 p-4 overflow-y-auto pb-safe">
-        <div class="w-full max-w-sm bg-slate-900/80 border border-slate-800/80 backdrop-blur-xl rounded-2xl p-6 shadow-2xl my-auto">
-            <div class="text-center mb-5">
-                <h2 class="text-xl font-bold text-slate-100">Create Your Vault</h2>
-                <p class="text-slate-400 text-xs mt-1">Access your personal cloud music library</p>
+    <!-- SIGN-UP / SIGN-IN GATEWAY -->
+    <div id="auth-screen" class="hidden fixed inset-0 z-40 flex items-center justify-center bg-slate-950 p-5 overflow-y-auto pb-safe">
+        <div class="w-full max-w-sm bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl my-auto">
+            
+            <div class="flex border-b border-slate-800 mb-6 text-sm">
+                <button id="tab-btn-signup" onclick="toggleAuthView('signup')" class="flex-1 pb-4 text-cyan-400 border-b-2 border-cyan-400 font-bold uppercase tracking-wider text-xs active:scale-95 transition-transform">Create Vault</button>
+                <button id="tab-btn-signin" onclick="toggleAuthView('signin')" class="flex-1 pb-4 text-slate-500 font-bold uppercase tracking-wider text-xs active:scale-95 transition-transform">Sign In</button>
             </div>
 
-            <form id="signup-form" class="space-y-3.5" onsubmit="handleSignUp(event)">
+            <!-- Panel: Sign Up / Create Vault -->
+            <div id="panel-signup" class="space-y-4">
                 <div>
-                    <label class="block text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Full Name</label>
-                    <input type="text" id="su-name" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-cyan-500">
+                    <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">User Handle</label>
+                    <input type="text" id="su-name" placeholder="Alex Mercer" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-cyan-500">
                 </div>
                 <div>
-                    <label class="block text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Email Address</label>
-                    <input type="email" id="su-email" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-cyan-500">
+                    <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Email Address</label>
+                    <input type="email" id="su-email" placeholder="alex@vault.io" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-cyan-500">
                 </div>
                 <div>
-                    <label class="block text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Confirm Email</label>
-                    <input type="email" id="su-confirm-email" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-cyan-500">
-                    <p id="email-error" class="text-red-400 text-[11px] mt-1 hidden">Emails do not match</p>
+                    <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Vault Password</label>
+                    <input type="password" id="su-password" placeholder="••••••••" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-cyan-500">
                 </div>
-                <div>
-                    <label class="block text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Password</label>
-                    <input type="password" id="su-password" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-cyan-500" oninput="checkPasswordStrength(this.value)">
-                    <div class="mt-1.5">
-                        <div class="h-1 w-full bg-slate-800 rounded-full overflow-hidden">
-                            <div id="strength-bar" class="h-full w-0 bg-red-500 transition-all duration-300"></div>
-                        </div>
-                        <p id="strength-text" class="text-[9px] uppercase tracking-wider text-slate-500 mt-1">Too short (Min. 8 chars)</p>
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Confirm Password</label>
-                    <input type="password" id="su-confirm-password" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-cyan-500">
-                    <p id="password-error" class="text-red-400 text-[11px] mt-1 hidden">Passwords do not match</p>
-                </div>
-                <button type="submit" id="signup-submit-btn" class="w-full bg-gradient-to-r from-cyan-500 to-blue-600 text-slate-950 font-semibold py-3 px-4 rounded-xl shadow-lg active:scale-[0.98] transition-all text-xs uppercase tracking-wider mt-2">
-                    Create Account
+                <button onclick="executeVaultSignUp()" class="w-full bg-gradient-to-r from-cyan-500 to-blue-600 text-slate-950 font-bold py-4 rounded-xl text-xs uppercase tracking-widest mt-2 active:scale-98 transition-transform">
+                    Generate New Vault
                 </button>
-            </form>
+            </div>
+
+            <!-- Panel: Sign In -->
+            <div id="panel-signin" class="space-y-4 hidden">
+                <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Email Address</label>
+                    <input type="email" id="si-email" placeholder="alex@vault.io" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-cyan-500">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Account Password</label>
+                    <input type="password" id="si-password" placeholder="••••••••" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-cyan-500">
+                </div>
+                <button onclick="executeVaultSignIn()" class="w-full bg-gradient-to-r from-emerald-500 to-teal-600 text-slate-950 font-bold py-4 rounded-xl text-xs uppercase tracking-widest mt-2 active:scale-98 transition-transform">
+                    Unlock Vault
+                </button>
+            </div>
+            <p id="auth-error-msg" class="text-red-400 text-[11px] font-medium mt-3 hidden text-center"></p>
         </div>
     </div>
 
-
+    <!-- MAIN DASHBOARD -->
     <div id="main-dashboard" class="hidden fixed inset-0 flex flex-col bg-slate-950 pt-safe pb-safe">
-        <header class="h-14 bg-slate-900 border-b border-slate-800/60 px-4 flex items-center justify-between flex-shrink-0 z-30">
+        <header class="h-16 bg-slate-900/80 border-b border-slate-800/60 px-4 flex items-center justify-between backdrop-blur-md z-30">
             <div class="flex items-center space-x-2">
-                <i data-lucide="disc" class="w-5 h-5 text-cyan-400 animate-spin-slow"></i>
-                <span class="text-base font-bold tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">SonicVault</span>
+                <i data-lucide="radio" class="w-5 h-5 text-cyan-400"></i>
+                <span class="text-sm font-black tracking-wider text-slate-200">SONICVAULT</span>
             </div>
-            <div class="flex items-center space-x-3">
-                <div class="w-7 h-7 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-full flex items-center justify-center font-bold text-slate-950 text-xs shadow-md" id="user-avatar" onclick="confirmLogout()">
+            <div class="flex items-center space-x-2">
+                <!-- Clean navigation interface profile node -->
+                <div class="w-11 h-11 bg-gradient-to-br from-cyan-400 to-indigo-600 rounded-full flex items-center justify-center font-bold text-slate-950 text-xs shadow-md active:scale-95 transition-transform" id="user-avatar" onclick="triggerProfileDisconnect()">
                     U
                 </div>
             </div>
         </header>
 
-        <div class="flex-1 overflow-y-auto no-scrollbar pb-24 p-4 space-y-5">
-            <div id="drop-zone" class="border-2 border-dashed border-slate-800 active:border-cyan-500/50 bg-slate-900/30 rounded-xl p-5 text-center cursor-pointer transition-all flex flex-col items-center justify-center">
-                <input type="file" id="audio-file-input" accept="audio/mp3, audio/mpeg" class="hidden" onchange="handleAudioSelect(event)">
-                <div class="w-10 h-10 rounded-full bg-slate-800/60 text-slate-400 flex items-center justify-center mb-2">
-                    <i data-lucide="upload-cloud" class="w-5 h-5"></i>
+        <div class="flex-1 overflow-y-auto no-scrollbar pb-28 p-4 space-y-6">
+            <div id="drop-zone" class="border-2 border-dashed border-slate-800 bg-slate-900/20 rounded-2xl p-6 text-center cursor-pointer flex flex-col items-center justify-center active:bg-slate-900/40 transition-colors">
+                <input type="file" id="audio-file-input" accept="audio/mp3, audio/mpeg" class="hidden" onchange="processAudioInflow(event)">
+                <div class="w-12 h-12 rounded-2xl bg-slate-800 text-cyan-400 flex items-center justify-center mb-3">
+                    <i data-lucide="music" class="w-5 h-5"></i>
                 </div>
-                <h3 class="text-xs font-semibold text-slate-200">Tap to Add Music File</h3>
-                <p class="text-[10px] text-slate-500 mt-0.5">Supports standard .mp3 tracks</p>
+                <h3 class="text-xs font-bold text-slate-200 uppercase tracking-wide">Ingest Audio Track</h3>
             </div>
 
             <div>
-                <div class="flex items-center justify-between mb-3 px-0.5">
-                    <h2 class="text-sm font-bold text-slate-200 tracking-wide flex items-center gap-1.5">
-                        <i data-lucide="library" class="w-4 h-4 text-cyan-400"></i> Your Saved Tracks
-                    </h2>
-                    <span id="track-count" class="text-[10px] bg-slate-900 text-slate-400 px-2 py-0.5 rounded-full border border-slate-800">0 Tracks</span>
+                <div class="flex items-center justify-between mb-4 px-1">
+                    <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest">Secure Locker Catalog</h2>
+                    <span id="track-count" class="text-[9px] font-bold bg-slate-900 text-slate-400 px-2.5 py-1 rounded-md border border-slate-800">0 TRACKS</span>
                 </div>
                 
-                <div id="empty-state" class="text-center py-12 border border-slate-900 bg-slate-900/10 rounded-xl">
-                    <i data-lucide="music-4" class="w-8 h-8 text-slate-700 mx-auto mb-2"></i>
-                    <p class="text-slate-400 text-xs font-medium">Your locker is empty</p>
+                <div id="empty-state" class="text-center py-16 border border-slate-900/60 bg-slate-900/10 rounded-2xl">
+                    <p class="text-slate-400 text-xs font-bold uppercase tracking-wide">No Tracks Mounted</p>
                 </div>
 
-                <div id="music-grid" class="grid grid-cols-2 gap-3.5 hidden">
-                    </div>
+                <div id="music-grid" class="grid grid-cols-2 gap-4 hidden"></div>
             </div>
         </div>
 
-        <footer class="fixed bottom-0 left-0 right-0 h-20 bg-slate-900/95 border-t border-slate-800/80 backdrop-blur-md px-4 pb-safe flex flex-col justify-center z-30">
+        <!-- FOOTER MEDIA PLAYER BAR -->
+        <footer class="fixed bottom-0 left-0 right-0 h-24 bg-slate-900/95 border-t border-slate-800/80 backdrop-blur-xl px-4 pb-safe flex flex-col justify-center z-30">
             <div class="flex items-center justify-between w-full">
-                <div class="flex items-center space-x-2 w-[45%] min-w-0">
-                    <div class="w-10 h-10 bg-slate-800 border border-slate-700/50 rounded-lg overflow-hidden flex-shrink-0">
-                        <img id="player-art" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='1'><rect width='20' height='20' x='2' y='2' rx='2'/><circle cx='12' cy='12' r='3'/></svg>" class="w-full h-full object-cover">
+                <div class="flex items-center space-x-3 w-[50%] min-w-0">
+                    <div class="w-11 h-11 bg-slate-950 border border-slate-800 rounded-xl overflow-hidden flex-shrink-0 relative">
+                        <img id="player-art" src="" class="w-full h-full object-cover hidden">
+                        <div id="player-art-placeholder" class="w-full h-full bg-slate-800 flex items-center justify-center text-slate-600"><i data-lucide="disc" class="w-5 h-5"></i></div>
+                        <div id="player-visualizer" class="absolute inset-0 bg-slate-950/80 hidden flex items-end justify-center gap-[2px] pb-1">
+                            <span class="v-bar w-1 bg-cyan-400 rounded-t"></span>
+                            <span class="v-bar w-1 bg-cyan-400 rounded-t"></span>
+                            <span class="v-bar w-1 bg-cyan-400 rounded-t"></span>
+                        </div>
                     </div>
                     <div class="min-w-0 flex-1">
-                        <p id="player-title" class="text-xs font-semibold text-slate-200 truncate">Not Playing</p>
-                        <p id="player-artist" class="text-[10px] text-slate-400 truncate">Select track</p>
+                        <p id="player-title" class="text-xs font-bold text-slate-200 truncate">Deck Offline</p>
+                        <p id="player-artist" class="text-[10px] font-medium text-slate-500 truncate mt-0.5">Select a track</p>
                     </div>
                 </div>
 
-                <div class="flex items-center space-x-3.5 justify-end w-[50%]">
-                    <button onclick="playPrevious()" class="text-slate-400 active:text-cyan-400 p-1 disabled:opacity-20" id="prev-btn" disabled>
-                        <i data-lucide="skip-back" class="w-4 h-4 fill-current"></i>
-                    </button>
-                    <button onclick="togglePlay()" class="w-9 h-9 bg-slate-100 active:bg-cyan-400 text-slate-950 rounded-full flex items-center justify-center shadow-md disabled:opacity-40" id="play-btn" disabled>
-                        <i data-lucide="play" class="w-4 h-4 fill-current ml-0.5" id="play-icon"></i>
-                    </button>
-                    <button onclick="playNext()" class="text-slate-400 active:text-cyan-400 p-1 disabled:opacity-20" id="next-btn" disabled>
-                        <i data-lucide="skip-forward" class="w-4 h-4 fill-current"></i>
-                    </button>
+                <div class="flex items-center space-x-1 justify-end w-[48%]">
+                    <button onclick="stepTrackBack()" class="w-12 h-12 text-slate-400 flex items-center justify-center active:text-cyan-400 active:scale-90 transition-all" id="prev-btn" disabled><i data-lucide="skip-back" class="w-5 h-5 fill-current"></i></button>
+                    <button onclick="toggleAudioPlayback()" class="w-12 h-12 bg-slate-100 text-slate-950 rounded-full flex items-center justify-center shadow-lg mx-1 active:scale-90 transition-transform" id="play-btn" disabled><i data-lucide="play" class="w-5 h-5 fill-current ml-0.5" id="play-icon"></i></button>
+                    <button onclick="stepTrackForward()" class="w-12 h-12 text-slate-400 flex items-center justify-center active:text-cyan-400 active:scale-90 transition-all" id="next-btn" disabled><i data-lucide="skip-forward" class="w-5 h-5 fill-current"></i></button>
                 </div>
             </div>
 
-            <div class="w-full flex items-center space-x-2 text-[9px] font-semibold text-slate-500 mt-2 px-0.5">
+            <div class="w-full flex items-center space-x-2 text-[9px] font-bold text-slate-500 mt-2 px-0.5">
                 <span id="current-time">0:00</span>
-                <div class="flex-1 relative py-1 cursor-pointer" id="progress-container" onclick="seekAudio(event)">
-                    <div class="h-1 bg-slate-800 rounded-full w-full overflow-hidden">
-                        <div id="progress-bar" class="h-full bg-gradient-to-r from-cyan-500 to-blue-500 w-0"></div>
+                <div class="flex-1 relative py-2 cursor-pointer" id="progress-container">
+                    <div class="h-[3px] bg-slate-800 rounded-full w-full overflow-hidden">
+                        <div id="progress-bar" class="h-full bg-cyan-400 w-0"></div>
                     </div>
                 </div>
                 <span id="total-duration">0:00</span>
             </div>
-            <input type="range" id="volume-slider" min="0" max="1" step="0.1" value="1" class="hidden">
         </footer>
     </div>
 
-
-    <div id="metadata-modal" class="hidden fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
-        <div class="w-full max-w-sm bg-slate-900 border border-slate-800/80 rounded-t-2xl sm:rounded-2xl p-5 shadow-2xl space-y-4 overflow-y-auto max-h-[90vh] pb-safe">
-            <div class="flex justify-between items-center border-b border-slate-800 pb-2.5">
-                <h3 class="text-sm font-bold text-slate-200">Catalog Track Metadata</h3>
-                <button onclick="closeModal()" class="text-slate-500 active:text-slate-300 p-1"><i data-lucide="x" class="w-4 h-4"></i></button>
+    <!-- METADATA MODAL -->
+    <div id="metadata-modal" class="hidden fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-950/80 backdrop-blur-md p-4">
+        <div class="w-full max-w-sm bg-slate-900 border border-slate-800 rounded-t-3xl sm:rounded-3xl p-5 space-y-4 max-h-[85vh] overflow-y-auto no-scrollbar">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                <h3 class="text-xs font-bold text-slate-200 uppercase tracking-widest">Catalog Metadata</h3>
+                <button onclick="closeMetadataModal()" class="w-12 h-12 flex items-center justify-center text-slate-500 active:text-slate-200"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
 
             <div class="space-y-4">
                 <div>
-                    <label class="block text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Cover Album Artwork</label>
-                    <div class="flex items-center space-x-3.5">
-                        <div class="w-16 h-16 border border-slate-800 bg-slate-950 rounded-xl flex flex-col items-center justify-center relative overflow-hidden flex-shrink-0 shadow-inner">
+                    <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Cover Art</label>
+                    <div class="flex items-center space-x-4">
+                        <div class="w-16 h-16 border border-slate-800 bg-slate-950 rounded-xl flex items-center justify-center relative overflow-hidden flex-shrink-0">
                             <img id="cover-preview" class="absolute inset-0 w-full h-full object-cover hidden">
-                            <div id="cover-prompt" class="text-slate-600">
-                                <i data-lucide="image" class="w-5 h-5 mx-auto"></i>
-                            </div>
+                            <i data-lucide="image" id="cover-prompt" class="text-slate-700 w-5 h-5"></i>
                         </div>
-                        
                         <div class="flex-1 grid grid-cols-2 gap-2">
-                            <button onclick="triggerCoverInput('library')" class="bg-slate-800 active:bg-slate-700 text-[11px] font-medium text-slate-200 py-1.5 px-2 rounded-lg flex items-center justify-center gap-1">
-                                <i data-lucide="file-box" class="w-3.5 h-3.5"></i> Library
-                            </button>
-                            <button onclick="triggerCoverInput('camera')" class="bg-slate-800 active:bg-slate-700 text-[11px] font-medium text-slate-200 py-1.5 px-2 rounded-lg flex items-center justify-center gap-1">
-                                <i data-lucide="camera" class="w-3.5 h-3.5"></i> Camera
-                            </button>
+                            <button onclick="triggerImageInput('library')" class="bg-slate-800 text-[11px] font-bold text-slate-300 py-3.5 rounded-lg active:bg-slate-700">Library</button>
+                            <button onclick="triggerImageInput('camera')" class="bg-slate-800 text-[11px] font-bold text-slate-300 py-3.5 rounded-lg active:bg-slate-700">Camera</button>
                         </div>
                     </div>
-
-                    <input type="file" id="cover-file-library" accept="image/*" class="hidden" onchange="handleCoverSelect(event)">
-                    <input type="file" id="cover-file-camera" accept="image/*" capture="environment" class="hidden" onchange="handleCoverSelect(event)">
-                    
-                    <div class="mt-2.5">
-                        <input type="text" id="cover-url" placeholder="Or paste image web link address..." class="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-cyan-500" oninput="handleCoverUrlInput(this.value)">
-                    </div>
+                    <input type="file" id="cover-file-library" accept="image/*" class="hidden" onchange="processImageFile(event)">
+                    <input type="file" id="cover-file-camera" accept="image/*" capture="environment" class="hidden" onchange="processImageFile(event)">
+                    <input type="text" id="cover-url" placeholder="Or paste image link URL..." class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2.5 text-xs text-slate-300 mt-2 focus:outline-none focus:border-cyan-500" oninput="processImageUrlInput(this.value)">
                 </div>
 
                 <div>
-                    <label class="block text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Track Title</label>
-                    <input type="text" id="meta-title" required class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-cyan-500">
+                    <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Track Audio Title</label>
+                    <input type="text" id="meta-title" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2.5 text-xs text-slate-200 focus:outline-none">
                 </div>
                 <div>
-                    <label class="block text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Artist</label>
-                    <input type="text" id="meta-artist" required class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-cyan-500">
-                </div>
-                <div>
-                    <label class="block text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Album</label>
-                    <input type="text" id="meta-album" required class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-cyan-500">
-                </div>
-                <div>
-                    <label class="block text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Description</label>
-                    <textarea id="meta-desc" rows="2" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-cyan-500 resize-none"></textarea>
+                    <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Artist / Producer</label>
+                    <input type="text" id="meta-artist" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2.5 text-xs text-slate-200 focus:outline-none">
                 </div>
             </div>
 
-            <div class="flex justify-end space-x-3 pt-3 border-t border-slate-800">
-                <button onclick="closeModal()" class="px-3.5 py-2 bg-slate-800 text-slate-300 rounded-lg text-xs font-semibold">Cancel</button>
-                <button onclick="saveTrackToVault()" class="px-4 py-2 bg-cyan-500 text-slate-950 rounded-lg text-xs font-semibold shadow-md">Save to Vault</button>
+            <div class="flex justify-end space-x-3 pt-4 border-t border-slate-800">
+                <button onclick="closeMetadataModal()" class="px-5 py-3 bg-slate-800 text-slate-300 text-xs font-bold rounded-xl active:bg-slate-700">Cancel</button>
+                <button onclick="commitTrackToIndexedDB()" class="px-6 py-3 bg-cyan-500 text-slate-950 text-xs font-bold rounded-xl active:bg-cyan-400">Mount Track</button>
             </div>
         </div>
     </div>
 
-
+    <!-- SCRIPT INFRASTRUCTURE ENGINE -->
     <script>
-        // --- EMAILJS CONFIG MATRIX ---
-        const EMAILJS_PUBLIC_KEY = "YOUR_PUBLIC_KEY_HERE"; 
-        const EMAILJS_SERVICE_ID = "YOUR_SERVICE_ID_HERE";
-        const EMAILJS_TEMPLATE_ID = "YOUR_TEMPLATE_ID_HERE";
-
-        if(EMAILJS_PUBLIC_KEY !== "YOUR_PUBLIC_KEY_HERE") {
-            emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
-        }
-
-        let currentTracks = [];
-        let currentTrackIndex = null;
-        let audioEngine = new Audio();
+        let db = null;
+        let vaultCatalogDeck = [];
+        let activePlaybackIndex = null;
+        let globalAudioEngine = new Audio();
         
         let stagingAudioBase64 = "";
         let stagingCoverBase64 = "";
 
-        const DEFAULT_ARTWORK = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 24 24' fill='none' stroke='%2306b6d4' stroke-width='1' style='background:%231e293b'><rect width='20' height='20' x='2' y='2' rx='2'/><circle cx='12' cy='12' r='3'/></svg>";
+        function initIndexedDBStore(callback) {
+            const request = indexedDB.open("SonicVaultDB", 1);
+            request.onupgradeneeded = (e) => {
+                let database = e.target.result;
+                if (!database.objectStoreNames.contains("tracks")) {
+                    database.createObjectStore("tracks", { keyPath: "id" });
+                }
+            };
+            request.onsuccess = (e) => {
+                db = e.target.result;
+                if(callback) callback();
+            };
+        }
 
         window.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
-            document.getElementById('drop-zone').addEventListener('click', () => document.getElementById('audio-file-input').click());
-            setupAudioEngineListeners();
-
-            setTimeout(() => {
-                const splash = document.getElementById('splash-screen');
-                splash.classList.add('opacity-0');
+            initIndexedDBStore(() => {
                 setTimeout(() => {
-                    splash.style.display = 'none';
-                    checkUserSessionState();
-                }, 700);
-            }, 2500);
+                    document.getElementById('splash-screen').classList.add('opacity-0');
+                    setTimeout(() => {
+                        document.getElementById('splash-screen').style.display = 'none';
+                        evaluateActiveSession();
+                    }, 300);
+                }, 1000);
+            });
+
+            const progressContainer = document.getElementById('progress-container');
+            const handleScrub = (e) => {
+                const touch = e.touches ? e.touches[0] : e;
+                if(activePlaybackIndex === null || !globalAudioEngine.duration) return; 
+                const bounding = progressContainer.getBoundingClientRect(); 
+                let positionX = (touch.clientX - bounding.left) / bounding.width;
+                if(positionX < 0) positionX = 0; if(positionX > 1) positionX = 1;
+                globalAudioEngine.currentTime = positionX * globalAudioEngine.duration;
+            };
+            progressContainer.addEventListener('touchstart', handleScrub);
+            progressContainer.addEventListener('touchmove', handleScrub);
+            progressContainer.addEventListener('click', handleScrub);
+
+            document.getElementById('drop-zone').addEventListener('click', () => document.getElementById('audio-file-input').click());
+            
+            globalAudioEngine.addEventListener('timeupdate', () => {
+                if(!globalAudioEngine.duration) return;
+                document.getElementById('progress-bar').style.width = `${(globalAudioEngine.currentTime / globalAudioEngine.duration) * 100}%`;
+                document.getElementById('current-time').textContent = formatTimestamp(globalAudioEngine.currentTime);
+            });
+            globalAudioEngine.addEventListener('loadedmetadata', () => {
+                document.getElementById('total-duration').textContent = formatTimestamp(globalAudioEngine.duration);
+            });
+            globalAudioEngine.addEventListener('ended', () => stepTrackForward());
         });
 
-        function checkUserSessionState() {
-            const activeSession = localStorage.getItem('sonic_vault_session');
-            if (activeSession) {
-                renderDashboardLayout(JSON.parse(activeSession));
+        function evaluateActiveSession() {
+            const activeSessionToken = localStorage.getItem('sonic_vault_profile_token');
+            if(activeSessionToken) {
+                bootstrapDashboard(JSON.parse(activeSessionToken));
             } else {
                 document.getElementById('auth-screen').classList.remove('hidden');
             }
         }
 
-        function checkPasswordStrength(p) {
-            const bar = document.getElementById('strength-bar');
-            const txt = document.getElementById('strength-text');
-            if(!p.length) {
-                bar.style.width = '0%'; txt.textContent = "Too short (Min. 8 chars)";
-                txt.className = "text-[9px] uppercase tracking-wider text-slate-500 mt-1"; return;
-            }
-            if(p.length < 8) {
-                bar.style.width = '30%'; bar.className = "h-full bg-red-500 transition-all";
-                txt.textContent = "Weak Strength"; txt.className = "text-[9px] uppercase tracking-wider text-red-400 mt-1";
-            } else if (p.length < 12) {
-                bar.style.width = '65%'; bar.className = "h-full bg-yellow-500 transition-all";
-                txt.textContent = "Moderate Protection"; txt.className = "text-[9px] uppercase tracking-wider text-yellow-400 mt-1";
-            } else {
-                bar.style.width = '100%'; bar.className = "h-full bg-emerald-500 transition-all";
-                txt.textContent = "Strong Vault Lock"; txt.className = "text-[9px] uppercase tracking-wider text-emerald-400 mt-1";
-            }
+        function toggleAuthView(view) {
+            const isSignUp = view === 'signup';
+            document.getElementById('panel-signup').classList.toggle('hidden', !isSignUp);
+            document.getElementById('panel-signin').classList.toggle('hidden', isSignUp);
+            document.getElementById('tab-btn-signup').className = isSignUp ? "flex-1 pb-4 text-cyan-400 border-b-2 border-cyan-400 font-bold text-xs uppercase" : "flex-1 pb-4 text-slate-500 font-bold text-xs uppercase";
+            document.getElementById('tab-btn-signin').className = !isSignUp ? "flex-1 pb-4 text-emerald-400 border-b-2 border-emerald-400 font-bold text-xs uppercase" : "flex-1 pb-4 text-slate-500 font-bold text-xs uppercase";
         }
 
-        function handleSignUp(event) {
-            event.preventDefault();
-            const name = document.getElementById('su-name').value;
-            const email = document.getElementById('su-email').value;
-            const confirmEmail = document.getElementById('su-confirm-email').value;
+        function executeVaultSignUp() {
+            const name = document.getElementById('su-name').value.trim();
+            const email = document.getElementById('su-email').value.trim();
             const pass = document.getElementById('su-password').value;
-            const confirmPass = document.getElementById('su-confirm-password').value;
+            const err = document.getElementById('auth-error-msg');
 
-            let valid = true;
-            if(email !== confirmEmail) { document.getElementById('email-error').classList.remove('hidden'); valid = false; } 
-            else { document.getElementById('email-error').classList.add('hidden'); }
-            if(pass !== confirmPass) { document.getElementById('password-error').classList.remove('hidden'); valid = false; } 
-            else { document.getElementById('password-error').classList.add('hidden'); }
-
-            if(pass.length < 8 || !valid) return;
-
-            const submitBtn = document.getElementById('signup-submit-btn');
-            submitBtn.textContent = "Authorizing Vault Profile...";
-            submitBtn.setAttribute('disabled', 'true');
-
-            dispatchWelcomeEmail(name, email, () => {
-                localStorage.setItem('sonic_vault_session', JSON.stringify({ name, email }));
-                document.getElementById('auth-screen').classList.add('hidden');
-                renderDashboardLayout({ name, email });
-            });
+            if(!name || !email || !pass) { err.textContent = "All parameters mandatory."; err.classList.remove('hidden'); return; }
+            
+            const profile = { name, email, passwordHash: btoa(pass) };
+            localStorage.setItem('sonic_vault_profile_token', JSON.stringify(profile));
+            document.getElementById('auth-screen').classList.add('hidden');
+            bootstrapDashboard(profile);
         }
 
-        function dispatchWelcomeEmail(name, email, callback) {
-            if(EMAILJS_PUBLIC_KEY === "YOUR_PUBLIC_KEY_HERE") {
-                alert(`Welcome, ${name}! Email delivery simulated to ${email}. Link real keys inside the configuration header wrapper to initialize live delivery networks.`);
-                callback(); return;
+        function executeVaultSignIn() {
+            const emailInput = document.getElementById('si-email').value.trim();
+            const passInput = document.getElementById('si-password').value;
+            const err = document.getElementById('auth-error-msg');
+
+            const activeSessionToken = localStorage.getItem('sonic_vault_profile_token');
+            if(!activeSessionToken) {
+                err.textContent = "No profile found. Create a Vault profile first."; err.classList.remove('hidden'); return;
             }
-            emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, { to_name: name, to_email: email })
-                .then(() => { alert(`Verification transmission processed to ${email}.`); callback(); }, 
-                () => { alert("Offline environment parameters activated."); callback(); });
+
+            const existingProfile = JSON.parse(activeSessionToken);
+            if(existingProfile.email === emailInput && existingProfile.passwordHash === btoa(passInput)) {
+                document.getElementById('auth-screen').classList.add('hidden');
+                bootstrapDashboard(existingProfile);
+            } else {
+                err.textContent = "Invalid credential pair match."; err.classList.remove('hidden'); return;
+            }
         }
 
-        function renderDashboardLayout(user) {
-            document.getElementById('user-avatar').textContent = user.name.charAt(0).toUpperCase();
-            loadTracksFromStorage();
+        function bootstrapDashboard(session) {
+            document.getElementById('user-avatar').textContent = session.name.charAt(0).toUpperCase();
+            loadTracksFromDB();
             document.getElementById('main-dashboard').classList.remove('hidden');
         }
 
-        function confirmLogout() {
-            if(confirm("Secure vault lock and disconnect profile?")) {
-                audioEngine.pause(); localStorage.removeItem('sonic_vault_session');
+        function triggerProfileDisconnect() {
+            if(confirm("Lock space and disconnect session?")) {
+                globalAudioEngine.pause();
                 document.getElementById('main-dashboard').classList.add('hidden');
-                document.getElementById('signup-form').reset(); checkPasswordStrength('');
-                document.getElementById('signup-submit-btn').textContent = "Create Account";
-                document.getElementById('signup-submit-btn').removeAttribute('disabled');
                 document.getElementById('auth-screen').classList.remove('hidden');
+                resetPlayerConsoleUI();
             }
         }
 
-        function handleAudioSelect(e) {
-            if(e.target.files.length) {
-                const file = e.target.files[0];
-                const filename = file.name.replace(/\.[^/.]+$/, "");
-                const parts = filename.split(" - ");
-                
-                document.getElementById('meta-title').value = parts[1] || filename;
-                document.getElementById('meta-artist').value = parts[0] || "Unknown Artist";
-                document.getElementById('meta-album').value = "Vault Single";
-                document.getElementById('meta-desc').value = "";
+        function processAudioInflow(e) {
+            if(!e.target.files.length) return;
+            const file = e.target.files[0];
+            const cleanName = file.name.replace(/\.[^/.]+$/, "");
+            const parts = cleanName.split(" - ");
 
-                const reader = new FileReader();
-                reader.onload = (e) => { stagingAudioBase64 = e.target.result; document.getElementById('metadata-modal').classList.remove('hidden'); };
-                reader.readAsDataURL(file);
-            }
+            document.getElementById('meta-title').value = parts[1] || cleanName;
+            document.getElementById('meta-artist').value = parts[0] || "Unknown Creator";
+
+            const reader = new FileReader();
+            reader.onload = (ex) => { stagingAudioBase64 = ex.target.result; document.getElementById('metadata-modal').classList.remove('hidden'); };
+            reader.readAsDataURL(file);
         }
 
-        // --- MULTI-INPUT COVER ROUTINE ATTACHMENT CONTROLLER ---
-        function triggerCoverInput(type) {
-            if(type === 'library') document.getElementById('cover-file-library').click();
-            if(type === 'camera') document.getElementById('cover-file-camera').click();
+        function triggerImageInput(channel) {
+            if(channel === 'library') document.getElementById('cover-file-library').click();
+            if(channel === 'camera') document.getElementById('cover-file-camera').click();
         }
 
-        function handleCoverSelect(e) {
-            if(e.target.files.length) {
-                const reader = new FileReader();
-                reader.onload = (ex) => {
-                    stagingCoverBase64 = ex.target.result;
-                    document.getElementById('cover-preview').src = stagingCoverBase64;
-                    document.getElementById('cover-preview').classList.remove('hidden');
-                    document.getElementById('cover-prompt').classList.add('hidden');
-                };
-                reader.readAsDataURL(e.target.files[0]);
-            }
+        function processImageFile(e) {
+            if(!e.target.files.length) return;
+            const reader = new FileReader();
+            reader.onload = (ex) => {
+                stagingCoverBase64 = ex.target.result;
+                document.getElementById('cover-preview').src = stagingCoverBase64;
+                document.getElementById('cover-preview').classList.remove('hidden');
+                document.getElementById('cover-prompt').classList.add('hidden');
+            };
+            reader.readAsDataURL(e.target.files[0]);
         }
 
-        function handleCoverUrlInput(url) {
-            if(!url.trim().length) {
-                if(!stagingCoverBase64) {
-                    document.getElementById('cover-preview').classList.add('hidden');
-                    document.getElementById('cover-prompt').classList.remove('hidden');
-                }
-                return;
-            }
+        function processImageUrlInput(url) {
+            if(!url.trim().length) return;
             stagingCoverBase64 = url;
             document.getElementById('cover-preview').src = url;
             document.getElementById('cover-preview').classList.remove('hidden');
             document.getElementById('cover-prompt').classList.add('hidden');
         }
 
-        function closeModal() {
+        function closeMetadataModal() {
             document.getElementById('metadata-modal').classList.add('hidden');
             stagingAudioBase64 = ""; stagingCoverBase64 = "";
             document.getElementById('cover-preview').classList.add('hidden');
@@ -430,106 +393,121 @@
             document.getElementById('audio-file-input').value = "";
         }
 
-        function saveTrackToVault() {
+        function commitTrackToIndexedDB() {
             if(!stagingAudioBase64) return;
-            currentTracks.push({
-                id: 't_' + Date.now(),
-                title: document.getElementById('meta-title').value.trim() || "Untitled",
-                artist: document.getElementById('meta-artist').value.trim() || "Unknown Artist",
-                album: document.getElementById('meta-album').value.trim() || "Vault Single",
-                description: document.getElementById('meta-desc').value.trim() || "",
-                audioData: stagingAudioBase64, coverData: stagingCoverBase64 || DEFAULT_ARTWORK
-            });
-            try {
-                localStorage.setItem('sonic_vault_tracks', JSON.stringify(currentTracks));
-                renderLibraryGrid(); closeModal();
-            } catch(e) { alert("Locker storage full. Clear space or select smaller audio files."); }
+            const record = {
+                id: 'tr_' + Date.now(),
+                title: document.getElementById('meta-title').value.trim() || "Untitled Track",
+                artist: document.getElementById('meta-artist').value.trim() || "Independent Creator",
+                audioBinary: stagingAudioBase64,
+                coverArtwork: stagingCoverBase64 || ""
+            };
+
+            let transaction = db.transaction(["tracks"], "readwrite");
+            transaction.objectStore("tracks").add(record);
+            transaction.onsuccess = () => { 
+                loadTracksFromDB(); 
+                closeMetadataModal(); 
+            };
         }
 
-        function loadTracksFromStorage() {
-            const raw = localStorage.getItem('sonic_vault_tracks');
-            currentTracks = raw ? JSON.parse(raw) : []; renderLibraryGrid();
+        function loadTracksFromDB() {
+            let store = db.transaction(["tracks"], "readonly").objectStore("tracks");
+            vaultCatalogDeck = [];
+            store.openCursor().onsuccess = (e) => {
+                let cursor = e.target.result;
+                if(cursor) { vaultCatalogDeck.push(cursor.value); cursor.continue(); } 
+                else { renderCatalogDisplayDOM(); }
+            };
         }
 
-        function purgeTrack(id, e) {
-            e.stopPropagation(); if(!confirm("Purge file from locker?")) return;
-            if(currentTrackIndex !== null && currentTracks[currentTrackIndex].id === id) { audioEngine.pause(); resetPlayerStateUI(); }
-            currentTracks = currentTracks.filter(t => t.id !== id);
-            localStorage.setItem('sonic_vault_tracks', JSON.stringify(currentTracks));
-            renderLibraryGrid();
+        function purgeTrackRecord(id, event) {
+            if(event) { event.stopPropagation(); }
+            if(!confirm("Erase track entry?")) return;
+            let transaction = db.transaction(["tracks"], "readwrite");
+            transaction.objectStore("tracks").delete(id);
+            transaction.oncomplete = () => {
+                if(activePlaybackIndex !== null && vaultCatalogDeck[activePlaybackIndex].id === id) {
+                    globalAudioEngine.pause();
+                    resetPlayerConsoleUI();
+                }
+                loadTracksFromDB();
+            };
         }
 
-        function renderLibraryGrid() {
-            const empty = document.getElementById('empty-state');
+        function renderCatalogDisplayDOM() {
             const grid = document.getElementById('music-grid');
-            document.getElementById('track-count').textContent = `${currentTracks.length} Track${currentTracks.length !== 1 ? 's' : ''}`;
-            if(!currentTracks.length) { empty.classList.remove('hidden'); grid.classList.add('hidden'); return; }
+            const empty = document.getElementById('empty-state');
+            document.getElementById('track-count').textContent = `${vaultCatalogDeck.length} TRACKS`;
+
+            if(!vaultCatalogDeck.length) { empty.classList.remove('hidden'); grid.classList.add('hidden'); return; }
             empty.classList.add('hidden'); grid.classList.remove('hidden'); grid.innerHTML = "";
-            currentTracks.forEach((track, index) => {
+
+            vaultCatalogDeck.forEach((track, idx) => {
                 const card = document.createElement('div');
-                card.className = "bg-slate-900 border border-slate-800/60 rounded-xl overflow-hidden flex flex-col relative shadow-md";
+                card.className = "bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden flex flex-col relative";
+                
                 card.innerHTML = `
-                    <div class="relative aspect-square bg-slate-950 overflow-hidden" onclick="playTrack(${index})">
-                        <img src="${track.coverData}" class="w-full h-full object-cover">
-                        <div class="absolute bottom-1.5 right-1.5 w-7 h-7 rounded-full bg-cyan-500 text-slate-950 flex items-center justify-center shadow-lg neon-glow"><i data-lucide="play" class="w-3.5 h-3.5 fill-current ml-0.5"></i></div>
-                        <button onclick="purgeTrack('${track.id}', event)" class="absolute top-1.5 right-1.5 p-1.5 bg-slate-950/80 text-slate-400 rounded-lg"><i data-lucide="trash-2" class="w-3 h-3"></i></button>
+                    <div class="relative aspect-square bg-slate-950 overflow-hidden font-sans" onclick="bootTrackStream(${idx})">
+                        ${track.coverArtwork ? `<img src="${track.coverArtwork}" class="w-full h-full object-cover">` : `<div class="w-full h-full flex items-center justify-center text-slate-700"><i data-lucide="music-3" class="w-8 h-8"></i></div>`}
+                        <div class="absolute bottom-2 right-2 w-10 h-10 rounded-xl bg-cyan-400 text-slate-950 flex items-center justify-center shadow-lg"><i data-lucide="play" class="w-5 h-5 fill-current ml-0.5"></i></div>
+                        <button onclick="purgeTrackRecord('${track.id}', event)" class="absolute top-1 right-1 w-12 h-12 flex items-center justify-center bg-slate-950/80 text-slate-400 rounded-xl active:bg-red-950/50 active:text-red-400"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
                     </div>
-                    <div class="p-2.5 flex-1 min-w-0"><h4 class="text-xs font-bold text-slate-200 truncate">${track.title}</h4><p class="text-[10px] font-medium text-slate-400 truncate mt-0.5">${track.artist}</p></div>
+                    <div class="p-3 min-w-0"><h4 class="text-xs font-bold text-slate-200 truncate">${track.title}</h4><p class="text-[10px] text-slate-500 truncate mt-0.5">${track.artist}</p></div>
                 `;
                 grid.appendChild(card);
             });
             lucide.createIcons();
         }
 
-        function setupAudioEngineListeners() {
-            audioEngine.addEventListener('timeupdate', () => {
-                if(!audioEngine.duration) return;
-                document.getElementById('progress-bar').style.width = `${(audioEngine.currentTime / audioEngine.duration) * 100}%`;
-                document.getElementById('current-time').textContent = formatTimeDisplay(audioEngine.currentTime);
-            });
-            audioEngine.addEventListener('loadedmetadata', () => document.getElementById('total-duration').textContent = formatTimeDisplay(audioEngine.duration));
-            audioEngine.addEventListener('ended', () => playNext());
-        }
+        function bootTrackStream(idx) {
+            activePlaybackIndex = idx;
+            const currentTrack = vaultCatalogDeck[idx];
 
-        function playTrack(i) {
-            if(i < 0 || i >= currentTracks.length) return; currentTrackIndex = i; const t = currentTracks[i];
-            audioEngine.src = t.audioData; audioEngine.load(); audioEngine.play().catch(() => {});
-            document.getElementById('player-art').src = t.coverData;
-            document.getElementById('player-title').textContent = t.title;
-            document.getElementById('player-artist').textContent = t.artist;
+            globalAudioEngine.src = currentTrack.audioBinary;
+            globalAudioEngine.load();
+            globalAudioEngine.play().catch(() => {});
+
+            if(currentTrack.coverArtwork) {
+                document.getElementById('player-art').src = currentTrack.coverArtwork;
+                document.getElementById('player-art').classList.remove('hidden');
+                document.getElementById('player-art-placeholder').classList.add('hidden');
+            } else {
+                document.getElementById('player-art').classList.add('hidden');
+                document.getElementById('player-art-placeholder').classList.remove('hidden');
+            }
+
+            document.getElementById('player-title').textContent = currentTrack.title;
+            document.getElementById('player-artist').textContent = currentTrack.artist;
             document.getElementById('play-btn').removeAttribute('disabled');
             document.getElementById('prev-btn').removeAttribute('disabled');
             document.getElementById('next-btn').removeAttribute('disabled');
-            updatePlayIcon(true);
+            document.getElementById('player-visualizer').classList.remove('hidden');
+            updatePlayIconState(true);
         }
 
-        function togglePlay() {
-            if(currentTrackIndex === null) return;
-            if(audioEngine.paused) { audioEngine.play(); updatePlayIcon(true); } 
-            else { audioEngine.pause(); updatePlayIcon(false); }
+        function toggleAudioPlayback() {
+            if(activePlaybackIndex === null) return;
+            if(globalAudioEngine.paused) { globalAudioEngine.play(); updatePlayIconState(true); document.getElementById('player-visualizer').classList.remove('hidden'); }
+            else { globalAudioEngine.pause(); updatePlayIconState(false); document.getElementById('player-visualizer').classList.add('hidden'); }
         }
 
-        function updatePlayIcon(isPlaying) {
+        function updatePlayIconState(isPlaying) {
             const el = document.getElementById('play-icon');
             el.setAttribute('data-lucide', isPlaying ? 'pause' : 'play');
-            if(isPlaying) el.classList.remove('ml-0.5'); else el.classList.add('ml-0.5');
             lucide.createIcons();
         }
 
-        function playPrevious() { if(currentTrackIndex !== null && currentTracks.length > 1) playTrack((currentTrackIndex - 1 + currentTracks.length) % currentTracks.length); }
-        function playNext() { if(currentTrackIndex !== null && currentTracks.length > 1) playTrack((currentTrackIndex + 1) % currentTracks.length); }
-        function seekAudio(e) { if(currentTrackIndex !== null && audioEngine.duration) { const r = document.getElementById('progress-container').getBoundingClientRect(); audioEngine.currentTime = ((e.clientX - r.left) / r.width) * audioEngine.duration; } }
-
-        function resetPlayerStateUI() {
-            currentTrackIndex = null; document.getElementById('player-art').src = DEFAULT_ARTWORK;
-            document.getElementById('player-title').textContent = "Not Playing"; document.getElementById('player-artist').textContent = "Select track";
-            document.getElementById('progress-bar').style.width = `0%`; document.getElementById('current-time').textContent = "0:00";
-            document.getElementById('total-duration').textContent = "0:00"; document.getElementById('play-btn').setAttribute('disabled', 'true');
-            document.getElementById('prev-btn').setAttribute('disabled', 'true'); document.getElementById('next-btn').setAttribute('disabled', 'true');
-            updatePlayIcon(false);
+        function stepTrackBack() { if(activePlaybackIndex !== null && vaultCatalogDeck.length > 1) bootTrackStream((activePlaybackIndex - 1 + vaultCatalogDeck.length) % vaultCatalogDeck.length); }
+        function stepTrackForward() { if(activePlaybackIndex !== null && vaultCatalogDeck.length > 1) bootTrackStream((activePlaybackIndex + 1) % vaultCatalogDeck.length); }
+        
+        function resetPlayerConsoleUI() {
+            activePlaybackIndex = null; document.getElementById('player-title').textContent = "Deck Offline"; document.getElementById('player-artist').textContent = "Select a track";
+            document.getElementById('progress-bar').style.width = '0%'; document.getElementById('current-time').textContent = '0:00'; document.getElementById('total-duration').textContent = '0:00';
+            document.getElementById('play-btn').setAttribute('disabled', 'true'); document.getElementById('player-visualizer').classList.add('hidden'); updatePlayIconState(false);
         }
 
-        function formatTimeDisplay(s) { if(isNaN(s)) return "0:00"; return `${Math.floor(s / 60)}:${Math.floor(s % 60) < 10 ? '0' : ''}${Math.floor(s % 60)}`; }
+        function formatTimestamp(s) { if(isNaN(s)) return "0:00"; return `${Math.floor(s/60)}:${Math.floor(s%60)<10?'0':''}${Math.floor(s%60)}`; }
     </script>
 </body>
 </html>
